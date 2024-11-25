@@ -2,59 +2,115 @@ CC := clang
 LDFLAGS := -fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer
 # Note: Disabled -Wincompatible-pointer-types-discards-qualifiers
 CFLAGS := -std=c2x -g3 -march=native -Wall -Wextra -Wpedantic -Wconversion -Wno-incompatible-pointer-types-discards-qualifiers $(LDFLAGS) -ffunction-sections -fdata-sections
-SRCEXT := c
 
-SRCDIR := src
-LIBDIR := lib
-BUILDDIR := build
-BINDIR := bin
+# Project directory structure
+SRC_DIR := src
+LIB_DIR := lib
+BUILD_DIR := build
+TEST_DIR := test
+BIN_DIR := bin
 
 # I use this variable to filter out the entrypoint of the "runtime" executable
 # when compiling for the "test" executable
-ENTRYPOINTOBJ := main.o
-TARGET := $(BINDIR)/cipher
+TARGET := $(BIN_DIR)/cipher
 
-TESTDIR := test
-TESTTARGET := $(BINDIR)/run-tests
+SRCEXT := c
+
+# Source files
+SRC := $(wildcard $(SRC_DIR)/*.$(SRCEXT))
+OBJS := $(SRC:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 
 INC := -I include
 
-SOURCES := $(wildcard $(SRCDIR)/*.$(SRCEXT))
-OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 
-TESTSOURCES := $(wildcard $(TESTDIR)/*.$(SRCEXT))
-TESTOBJECTS := $(patsubst $(TESTDIR)/%,$(BUILDDIR)/%,$(TESTSOURCES:.$(SRCEXT)=.o))
-
-
-.PHONY: clean test check-cppcheck check-infer
-
-
-$(TARGET): $(OBJECTS)
-	@echo "Linking..."
-	@mkdir -p $(BINDIR)
-	$(CC) $(LDFLAGS) $^ -o $(TARGET)
+# Test flags
+RC_DIR := $(LIB_DIR)/rapidcheck
+RC_LIB := $(RC_DIR)/build/librapidcheck.a
+TEST_INC := $(INC) -I $(RC_DIR)/include
+TEST_LDFLAGS := $(LDFLAGS) -L $(RC_DIR)/build
+TEST_LDLIBS := -l rapidcheck
+TEST_TARGET := $(BIN_DIR)/run-tests
 
 # main.o contains the entrypoint of the non-test code, filter it out so there aren't two entrypoints
-test: $(TESTOBJECTS) $(filter-out $(BUILDDIR)/$(ENTRYPOINTOBJ),$(OBJECTS))
-	@echo "Linking test object files...";
-	@mkdir -p $(BINDIR)
-	$(CC) $(LDFLAGS) $^ -o $(TESTTARGET)
-	$(TESTTARGET)
+COMMON_OBJS := $(filter-out $(BUILD_DIR)/main.o,$(OBJS))
 
-$(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
-	@echo "Building object files...";
-	@mkdir -p $(BUILDDIR)
-	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
+# Test files
+TEST_SRC := $(wildcard $(TEST_DIR)/*.$(SRCEXT))
+TEST_OBJS := $(TEST_SRC:$(TEST_DIR)/%.c=$(BUILD_DIR)/%.o)
 
-$(BUILDDIR)/%.o: $(TESTDIR)/%.$(SRCEXT)
-	@echo "Building test object files...";
-	@mkdir -p $(BUILDDIR)
-	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
+
+# Determine number of cores
+NPROC := $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 1)
+
+
+# JSON Compilation Database file
+JSON_DB := compile_commands.json
+JSON_PARTS := $(OBJS:=.json) $(TEST_OBJS:=.json)
+
+
+.PHONY: all test clean-deps clean check-cppcheck check-infer
+
+
+all: $(TARGET) $(JSON_DB)
+
+$(TARGET): $(OBJS)
+	@echo "Linking..."
+	@mkdir -p $(BIN_DIR)
+	$(CC) $(LDFLAGS) $^ -o $(TARGET)
+
+test: $(TEST_OBJS) $(COMMON_OBJS)
+	@echo "Linking test object files..."
+	@mkdir -p $(BIN_DIR)
+	$(CC) $(TEST_LDFLAGS) $^ $(TEST_LDLIBS) -o $(TEST_TARGET)
+	@echo "Running tests:"
+	$(TEST_TARGET)
+
+$(JSON_DB): $(JSON_PARTS)
+	@echo "Creating JSON Compilation Database..."
+	@echo '[' > $@
+	$(foreach part,$(JSON_PARTS),cat $(part) >> $@;)
+	@echo ']' >> $@
+
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(SRCEXT)
+	@echo "Building object files..."
+	@mkdir -p $(BUILD_DIR)
+	$(CC) $(CFLAGS) $(INC) -MJ $@.json -c -o $@ $<
+
+$(BUILD_DIR)/%.o: $(TEST_DIR)/%.$(SRCEXT) $(RC_LIB)
+	@echo "Building test object files..."
+	@mkdir -p $(BUILD_DIR)
+	$(CC) $(CFLAGS) $(TEST_INC) -MJ $@.json -c -o $@ $<
+
+
+$(RC_LIB):
+	@echo "\nDownloading RapidCheck..."
+	@mkdir -p $(BUILD_DIR)
+	wget --output-document=$(BUILD_DIR)/rapidcheck.tar.gz \
+    https://api.github.com/repos/emil-e/rapidcheck/tarball/master
+	@echo "\nUnpacking RapidCheck..."
+	@mkdir -p $(RC_DIR)
+	tar --gunzip \
+    --extract \
+    --strip-components=1 \
+    --file $(BUILD_DIR)/rapidcheck.tar.gz \
+    --directory $(RC_DIR)/
+	$(RM) -r $(RC_DIR)/.git/
+	$(RM) $(BUILD_DIR)/rapidcheck.tar.gz
+	@echo "\nBuilding RapidCheck..."
+	mkdir -p $(RC_DIR)/build && \
+    cd $(RC_DIR)/build/ && \
+    cmake .. && \
+    cmake --build . --parallel $(NPROC)
+
+clean-deps:
+	@echo "Cleaning external libraries..."
+	$(RM) $(BUILD_DIR)/rapidcheck.tar.gz
+	$(RM) -r $(RC_DIR)/
 
 
 clean:
 	@echo "Cleaning...";
-	$(RM) -r $(BUILDDIR)/*.o $(TARGET) $(TESTTARGET)
+	$(RM) -r $(BUILD_DIR)/*.o $(TARGET) $(TEST_TARGET)
 
 
 # --suppress=missingIncludeSystem is needed if cppcheck cannot find the standard headers on your system
