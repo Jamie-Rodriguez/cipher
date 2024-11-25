@@ -5,6 +5,9 @@ lib/*
 # Ignore any executables
 bin/*
 
+# Ignore Clangd's cache files
+.cache/
+
 # Ignore compilation database
 compile_commands.json
 
