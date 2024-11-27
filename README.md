@@ -60,6 +60,7 @@ make check-infer
 To-Do
 =====
 
+- [ ] Make Caesar & Vigenère ciphers able to work with a provided custom alphabet
 - [ ] Add *autokey* mode to Vigenère cipher
 - [ ] Add Vigenère cipher variation: *Variant Beaufort*
 - [ ] Add ability to read/write input/output files

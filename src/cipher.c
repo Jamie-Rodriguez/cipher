@@ -1,9 +1,12 @@
 #include "cipher.h"
 #include <ctype.h>
+#include <stdio.h>
 
 
 static inline char rotate(char base, int rotation, char c) {
-        return (char) (c - base + rotation) % 26 + base;
+        // Perform the addition as an integer, because an 8-bit char can
+        // overflow!
+        return (char) (((int) (c - base) + rotation) % 26 + base);
 }
 
 // WARNING: mutates 'plaintext'!
