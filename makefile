@@ -1,3 +1,10 @@
+UNAME_S := $(shell uname -s)
+# This is only required when linking against RapidCheck during property-based
+# testing on MacOS
+MACOS_VERSION := $(shell if [ "$(UNAME_S)" = "Darwin" ]; then \
+        sw_vers -productVersion | cut -d . -f 1,2 | xargs printf '%s'; \
+    fi)
+
 CC := clang
 CXX := clang++
 LDFLAGS := -fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer
@@ -39,6 +46,9 @@ RC_DIR := $(LIB_DIR)/rapidcheck
 RC_LIB := $(RC_DIR)/build/librapidcheck.a
 PROP_TEST_INC := $(INC) -isystem $(RC_DIR)/include
 PROP_TEST_LDFLAGS := $(LDFLAGS) -L $(RC_DIR)/build
+ifeq ($(UNAME_S),Darwin)
+    PROP_TEST_LDFLAGS += -mmacosx-version-min=$(MACOS_VERSION)
+endif
 PROP_TEST_LDLIBS := -l rapidcheck
 PROP_TEST_TARGET := $(BIN_DIR)/run-prop-tests
 
