@@ -37,7 +37,7 @@ TEST_TARGET := $(BIN_DIR)/run-tests
 # Property-based tests
 RC_DIR := $(LIB_DIR)/rapidcheck
 RC_LIB := $(RC_DIR)/build/librapidcheck.a
-PROP_TEST_INC := $(INC) -I $(RC_DIR)/include
+PROP_TEST_INC := $(INC) -isystem $(RC_DIR)/include
 PROP_TEST_LDFLAGS := $(LDFLAGS) -L $(RC_DIR)/build
 PROP_TEST_LDLIBS := -l rapidcheck
 PROP_TEST_TARGET := $(BIN_DIR)/run-prop-tests
