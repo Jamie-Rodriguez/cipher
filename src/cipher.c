@@ -1,6 +1,6 @@
 #include "cipher.h"
 #include <ctype.h>
-#include <stdio.h>
+#include <stdbool.h>
 
 
 static inline char rotate(char base, int rotation, char c) {
@@ -31,12 +31,23 @@ void caesar(char key, size_t length, char plaintext[length]) {
 
 // WARNING: mutates 'ciphertext'!
 void decipher_caesar(char key, size_t length, char ciphertext[length]) {
+        if (!isalpha(key)) return;
+
         caesar('Z' - (char) toupper(key) + 'A' + 1, length, ciphertext);
 }
 
+// Check if the key contains any alphabetic characters
+static inline bool is_valid_key(size_t key_len, const char key[key_len]) {
+        for (size_t i = 0; i < key_len; i++)
+                if (isalpha(key[i])) return true;
+
+        return false;
+}
 
 // WARNING: mutates 'plaintext'!
 void vigenere(size_t key_len, const char key[key_len], size_t len, char plaintext[len]) {
+        if (!is_valid_key(key_len, key)) return;
+
         size_t key_index = 0;
 
         for (size_t c = 0; c < len; c++) {
@@ -44,7 +55,6 @@ void vigenere(size_t key_len, const char key[key_len], size_t len, char plaintex
 
                 while (!isalpha(key[key_index]))
                         key_index = (key_index + 1) % key_len;
-
 
                 // mutates 'plaintext'!
                 caesar(key[key_index], 1, plaintext + c);
@@ -55,6 +65,8 @@ void vigenere(size_t key_len, const char key[key_len], size_t len, char plaintex
 
 // WARNING: mutates 'ciphertext'!
 void decipher_vigenere(size_t key_len, const char key[key_len], size_t len, char ciphertext[len]) {
+        if (!is_valid_key(key_len, key)) return;
+
         size_t key_index = 0;
 
         for (size_t c = 0; c < len; c++) {

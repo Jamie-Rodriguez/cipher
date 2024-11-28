@@ -11,7 +11,7 @@ int main() {
             [] {
                     const std::string plaintext =
                         *rc::gen::nonEmpty(rc::gen::string<std::string>());
-                    const char key = *rc::gen::suchThat<char>(isalpha);
+                    const char key = *rc::gen::character<char>();
                     // Copy plaintext to modifiable buffer
                     std::string text = plaintext;
 
@@ -37,7 +37,6 @@ int main() {
                     // Test lowercase also
                     caesar('a', text.length(), text.data());
                     RC_ASSERT(text == plaintext);
-                    // Also test deciphering!
                     decipher_caesar('a', text.length(), text.data());
                     RC_ASSERT(text == plaintext);
             });
@@ -79,4 +78,34 @@ int main() {
 
                     RC_ASSERT(cauchyForm == compositeForm);
             });
+
+        rc::check(
+            "Vigenère: Encryption followed by decryption returns original text\n(decryption is the inverse of encryption)",
+            [] {
+                    const std::string plaintext =
+                        *rc::gen::nonEmpty(rc::gen::string<std::string>());
+                    const std::string key = *rc::gen::nonEmpty(rc::gen::string<std::string>());
+                    std::string text = plaintext;
+
+                    vigenere(key.length(), key.data(), text.length(), text.data());
+                    decipher_vigenere(key.length(), key.data(), text.length(), text.data());
+
+                    RC_ASSERT(text == plaintext);
+            });
+
+        rc::check("Vigenère: Single-character key is equivalent to Caesar cipher", [] {
+                const std::string plaintext = *rc::gen::nonEmpty(rc::gen::string<std::string>());
+                const char key = *rc::gen::suchThat<char>(isalpha);
+                // Copy plaintext to modifiable buffer
+                std::string caesarText = plaintext;
+                std::string vigenereText = plaintext;
+
+                caesar(key, caesarText.length(), caesarText.data());
+                vigenere(1, &key, vigenereText.length(), vigenereText.data());
+                RC_ASSERT(caesarText == vigenereText);
+
+                decipher_caesar(key, caesarText.length(), caesarText.data());
+                decipher_vigenere(1, &key, vigenereText.length(), vigenereText.data());
+                RC_ASSERT(caesarText == vigenereText);
+        });
 }
