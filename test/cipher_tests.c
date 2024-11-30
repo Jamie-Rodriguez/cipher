@@ -3,7 +3,7 @@
 #include <string.h>
 
 
-void test_caesar_cipher_with_key_A() {
+void test_caesar_cipher_with_key_A(void) {
         char plaintext[] = "THEQUICKBROWNFOXJUMPSOVERTHELAZYDOG";
 
         caesar('A', strlen(plaintext), plaintext);
@@ -12,7 +12,7 @@ void test_caesar_cipher_with_key_A() {
                "Caesar cipher with key 'A' failed");
 }
 
-void test_caesar_cipher_with_key_X() {
+void test_caesar_cipher_with_key_X(void) {
         char plaintext[] = "THEQUICKBROWNFOXJUMPSOVERTHELAZYDOG";
 
         caesar('X', strlen(plaintext), plaintext);
@@ -21,7 +21,7 @@ void test_caesar_cipher_with_key_X() {
                "Caesar cipher with key 'X' failed");
 }
 
-void test_caesar_cipher_non_alphabetic() {
+void test_caesar_cipher_non_alphabetic(void) {
         char plaintext[] = "Hello, World!";
 
         caesar('J', strlen(plaintext), plaintext);
@@ -30,7 +30,7 @@ void test_caesar_cipher_non_alphabetic() {
                "Caesar cipher on plaintext containing non-alphanumeric characters failed");
 }
 
-void test_caesar_cipher_with_invalid_key() {
+void test_caesar_cipher_with_invalid_key(void) {
         char plaintext[] = "I SHOULD NOT CHANGE BECAUSE THE KEY IS INVALID!";
 
         caesar('.', strlen(plaintext), plaintext);
@@ -39,7 +39,7 @@ void test_caesar_cipher_with_invalid_key() {
                "Caesar cipher with invalid key failed");
 }
 
-void test_decipher_caesar() {
+void test_decipher_caesar(void) {
         char ciphertext[] = "ZSSZBJZSNMBD";
 
         decipher_caesar('Z', strlen(ciphertext), ciphertext);
@@ -47,7 +47,7 @@ void test_decipher_caesar() {
         assert(strcmp(ciphertext, "ATTACKATONCE") == 0 && "Deciphering Caesar cipher failed");
 }
 
-void test_decipher_caesar_non_alphabetic() {
+void test_decipher_caesar_non_alphabetic(void) {
         char ciphertext[] = "QNUUX, FXAUM!";
 
         decipher_caesar('J', strlen(ciphertext), ciphertext);
@@ -57,7 +57,7 @@ void test_decipher_caesar_non_alphabetic() {
             "Deciphering Caesar cipher on ciphertext containing non-alphabetic characters failed");
 }
 
-void test_decipher_caesar_with_invalid_key() {
+void test_decipher_caesar_with_invalid_key(void) {
         char ciphertext[] = "UNCHANGEDCIPHERTEXT";
 
         decipher_caesar('!', strlen(ciphertext), ciphertext);
@@ -67,7 +67,7 @@ void test_decipher_caesar_with_invalid_key() {
 }
 
 
-void test_vigenere_cipher_non_alphabetic() {
+void test_vigenere_cipher_non_alphabetic(void) {
         char plaintext[] = "As we wind on down the road, our shadows taller than our souls...";
         const char* key = "Led Zeppelin";
 
@@ -78,7 +78,7 @@ void test_vigenere_cipher_non_alphabetic() {
                "Vigenère cipher on plaintext containing non-alphabetic characters failed");
 }
 
-void test_vigenere_cipher_key_longer_than_plaintext() {
+void test_vigenere_cipher_key_longer_than_plaintext(void) {
         char plaintext[] = "TEXT";
         const char* key = "LONGKEY";
 
@@ -88,7 +88,7 @@ void test_vigenere_cipher_key_longer_than_plaintext() {
                "Vigenère cipher with key longer than plaintext failed");
 }
 
-void test_vigenere_cipher_with_non_alphabetic_in_key() {
+void test_vigenere_cipher_with_non_alphabetic_in_key(void) {
         char plaintext[] = "Quality is not an act, it is a habit.";
         const char* key = "I'm a key!";
 
@@ -98,7 +98,7 @@ void test_vigenere_cipher_with_non_alphabetic_in_key() {
                "Vigenère cipher with non-alphabetic char in key failed");
 }
 
-void test_decipher_vigenere() {
+void test_decipher_vigenere(void) {
         char ciphertext[] = "GFNJCE CRLRG SOI AOR";
         const char* key = "ARAGON";
 
@@ -108,7 +108,7 @@ void test_decipher_vigenere() {
                "Deciphering Vigenère cipher failed");
 }
 
-void test_decipher_vigenere_non_alphabetic() {
+void test_decipher_vigenere_non_alphabetic(void) {
         char ciphertext[] = "QLIDBHR TW NFB SG OVE, MT ZA S AOUTX.";
 
         const char* key = "ARISTOTLE";
@@ -118,7 +118,7 @@ void test_decipher_vigenere_non_alphabetic() {
                "Deciphering Vigenère cipher with non-alphabetic char in ciphertext failed");
 }
 
-void test_decipher_vigenere_with_non_alphabetic_in_key() {
+void test_decipher_vigenere_with_non_alphabetic_in_key(void) {
         char ciphertext[] = "Qz tri jizd yj rpq bvmll, fho slm-qyoh kiz ic ogvs.";
         const char* key = "I'm a key!";
 

@@ -5,7 +5,7 @@ extern "C" {
 }
 
 
-int main() {
+int main(const int argc, char const* argv[]) {
         rc::check(
             "Caesar: Encryption followed by decryption returns original text\n(decryption is the inverse of encryption)",
             [] {

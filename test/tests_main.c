@@ -1,7 +1,7 @@
 #include "cipher_tests.h"
 
 
-int main() {
+int main(const int argc, char const* argv[]) {
         test_caesar_cipher_with_key_A();
         test_caesar_cipher_with_key_X();
         test_caesar_cipher_non_alphabetic();
