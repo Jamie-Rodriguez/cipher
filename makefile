@@ -193,5 +193,5 @@ check-infer:
     --write-html                  \
     --issues-tests issues.txt     \
     --cost-issues-tests costs.txt \
-    -- make
+    -- make $(TARGET)
 	$(MAKE) clean
