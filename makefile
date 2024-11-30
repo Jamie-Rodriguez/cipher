@@ -26,10 +26,10 @@ BIN_DIR := bin
 # when compiling for the "test" executable
 TARGET := $(BIN_DIR)/cipher
 
-SRCEXT := c
+SRC_EXT := c
 
 # Source files
-SRC := $(wildcard $(SRC_DIR)/*.$(SRCEXT))
+SRC := $(wildcard $(SRC_DIR)/*.$(SRC_EXT))
 OBJS := $(SRC:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 
 INC := -I include
@@ -56,12 +56,13 @@ PROP_TEST_TARGET := $(BIN_DIR)/run-prop-tests
 COMMON_OBJS := $(filter-out $(BUILD_DIR)/main.o,$(OBJS))
 
 # Test files
-TEST_SRC := $(wildcard $(TEST_DIR)/*.$(SRCEXT))
+TEST_SRC := $(wildcard $(TEST_DIR)/*.$(SRC_EXT))
 TEST_OBJS := $(TEST_SRC:$(TEST_DIR)/%.c=$(BUILD_DIR)/%.o)
 
 # Property-based test files
 PROP_TEST_SRC := $(wildcard $(TEST_DIR)/*.cpp)
 PROP_TEST_OBJS := $(PROP_TEST_SRC:$(TEST_DIR)/%.cpp=$(BUILD_DIR)/%.o)
+
 
 # Determine number of cores
 NPROC := $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 1)
@@ -69,8 +70,6 @@ NPROC := $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 1)
 
 # JSON Compilation Database file
 JSON_DB := compile_commands.json
-# NOTE: not including C++ code for now
-JSON_PARTS := $(OBJS:=.json) $(TEST_OBJS:=.json)
 
 
 .PHONY: all unit-test prop-test clean-deps clean check-cppcheck check-infer
@@ -79,36 +78,54 @@ JSON_PARTS := $(OBJS:=.json) $(TEST_OBJS:=.json)
 all: $(TARGET) $(JSON_DB)
 
 $(TARGET): $(OBJS)
-	@echo "Linking..."
+	@echo "Linking executable..."
 	@mkdir -p $(BIN_DIR)
 	$(CC) $(LDFLAGS) $^ -o $(TARGET)
 
-unit-test: $(TEST_OBJS) $(COMMON_OBJS)
-	@echo "Linking unit test object files..."
-	@mkdir -p $(BIN_DIR)
-	$(CC) $(TEST_LDFLAGS) $^ $(TEST_LDLIBS) -o $(TEST_TARGET)
+unit-test: $(TEST_TARGET)
 	@echo "Running tests:"
 	$(TEST_TARGET)
 
-prop-test: $(PROP_TEST_OBJS) $(COMMON_OBJS)
-	@echo "Linking property-based test object files..."
-	@mkdir -p $(BIN_DIR)
-	$(CXX) $(PROP_TEST_LDFLAGS) $^ $(PROP_TEST_LDLIBS) -o $(PROP_TEST_TARGET)
+prop-test: $(PROP_TEST_TARGET)
 	@echo "Running property-based tests:"
 	RC_PARAMS="max_success=10000" $(PROP_TEST_TARGET)
 
-$(JSON_DB): $(JSON_PARTS)
+$(TEST_TARGET): $(TEST_OBJS) $(COMMON_OBJS)
+	@echo "Linking unit test object files..."
+	@mkdir -p $(BIN_DIR)
+	$(CC) $(TEST_LDFLAGS) $^ $(TEST_LDLIBS) -o $(TEST_TARGET)
+
+$(PROP_TEST_TARGET): $(PROP_TEST_OBJS) $(COMMON_OBJS)
+	@echo "Linking property-based test object files..."
+	@mkdir -p $(BIN_DIR)
+	$(CXX) $(PROP_TEST_LDFLAGS) $^ $(PROP_TEST_LDLIBS) -o $(PROP_TEST_TARGET)
+
+$(JSON_DB): $(OBJS) $(TEST_OBJS) $(PROP_TEST_OBJS)
 	@echo "Creating JSON Compilation Database..."
 	@echo '[' > $@
-	$(foreach part,$(JSON_PARTS),cat $(part) >> $@;)
+	cat $(^:=.json) >> $@
+	# This awk script removes the trailing comma from the last line
+	awk '                           \
+    NR==1 {                     \
+        text=$$0;                \
+        next                    \
+    }                           \
+    {                           \
+        text=text ORS $$0        \
+    }                           \
+    END {                       \
+        sub(/,[^,]*$$/,"",text); \
+        print text              \
+    }' $(JSON_DB) > temp_compile_commands.json && \
+    mv temp_compile_commands.json $(JSON_DB)
 	@echo ']' >> $@
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(SRCEXT)
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(SRC_EXT)
 	@echo "Building object files..."
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(INC) -MJ $@.json -c -o $@ $<
 
-$(BUILD_DIR)/%.o: $(TEST_DIR)/%.$(SRCEXT)
+$(BUILD_DIR)/%.o: $(TEST_DIR)/%.$(SRC_EXT)
 	@echo "Building unit test object files..."
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(TEST_INC) -MJ $@.json -c -o $@ $<
