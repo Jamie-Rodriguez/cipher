@@ -60,8 +60,10 @@ make check-infer
 To-Do
 =====
 
-- [ ] Make Caesar & Vigenère ciphers able to work with a provided custom alphabet
-- [ ] Add *autokey* mode to Vigenère cipher
-- [ ] Add Vigenère cipher variation: *Variant Beaufort*
-- [ ] Add ability to read/write input/output files
-- [ ] Start finding ways to create a tool to help decipher Vigenère ciphers
+* [ ] Start finding ways to create a tool to help decipher Vigenère ciphers
+* [ ] Add *autokey* mode to Vigenère cipher
+* [ ] Add Vigenère cipher variation: *Variant Beaufort*
+* [ ] Make Caesar & Vigenère ciphers able to work with a provided custom alphabet
+    - What should happen if a character in the key or plaintext is not present in the alphabet?
+        + Emit a warning and ignore the unknown character?
+* [ ] Add ability to read/write input/output files
