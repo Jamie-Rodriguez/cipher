@@ -1,7 +1,7 @@
 #include <rapidcheck.h>
 
 extern "C" {
-        #include "cipher.h"
+#include "cipher.h"
 }
 
 

@@ -17,8 +17,8 @@ Cpp11BracedListStyle: false
 IndentCaseLabels: true
 JavaScriptQuotes: Single
 KeepEmptyLinesAtTheStartOfBlocks: false
-# QualifierAlignment: Left
 PointerAlignment: Left
+# QualifierAlignment: Left
 ReflowComments: false
 # RemoveBracesLLVM: true
 SpaceAfterCStyleCast: true

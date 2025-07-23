@@ -91,11 +91,11 @@ int main(const int argc, char const* argv[]) {
         }
 
         struct option long_options[] = {
-                {    "help",       no_argument, NULL, 'h'},
-                {"decipher",       no_argument, NULL, 'd'},
-                {  "caesar", required_argument, NULL, 'c'},
-                {"vigenere", required_argument, NULL, 'v'},
-                {      NULL,                 0, NULL,   0}  // Null terminator for the options array
+                {     "help",       no_argument, NULL, 'h' },
+                { "decipher",       no_argument, NULL, 'd' },
+                {   "caesar", required_argument, NULL, 'c' },
+                { "vigenere", required_argument, NULL, 'v' },
+                {       NULL,                 0, NULL,   0 }  // Null terminator for the options array
         };
 
         char output_text[OUTPUT_TEXT_SIZE] = { 0 };
